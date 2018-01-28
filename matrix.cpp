@@ -398,3 +398,81 @@ CMatrix CMatrix::mattan(CMatrix &M){
 	}
 	return Result;
 }
+
+
+CMatrix CMatrix::trigStrtoDouble(string trigExpression ,vector<CMatrix> &matrix_List){
+
+	string trigFunction = trigExpression.substr(0,trigExpression.find('('));
+	string angle = trigExpression.substr(trigExpression.find('(')+1 , trigExpression.find(')')-trigExpression.find('(')-1);
+
+	if(isNumber(angle)){
+		CMatrix Result(1,1);
+
+		if (trigFunction == "sin") {
+			Result.values[0][0] = sin(atof(angle.c_str()));
+		}else if (trigFunction == "cos"){
+			Result.values[0][0] = cos(atof(angle.c_str()));
+		}else if (trigFunction == "tan"){
+			Result.values[0][0] = tan(atof(angle.c_str()));
+		}else if (trigFunction == "sinh"){
+			Result.values[0][0] = sinh(atof(angle.c_str()));
+		}else if (trigFunction == "cosh"){
+			Result.values[0][0] = cosh(atof(angle.c_str()));
+		}else if (trigFunction == "tanh"){
+			Result.values[0][0] = tanh(atof(angle.c_str()));
+		}else if (trigFunction == "sinInv") {
+			Result.values[0][0] = asin(atof(angle.c_str()));
+		}else if (trigFunction == "cosInv"){
+			Result.values[0][0] = acos(atof(angle.c_str()));
+		}else if (trigFunction == "tanInv"){
+			Result.values[0][0] = atan(atof(angle.c_str()));
+		}/*else if (trigFunction == "sinhInv"){
+		 Result.values[0][0] = asinh(atof(angle.c_str()));
+		 }else if (trigFunction == "coshInv"){
+		 Result.values[0][0] = acosh(atof(angle.c_str()));
+		 }else if (trigFunction == "tanhInv"){
+		 Result.values[0][0] = atanh(atof(angle.c_str()));
+		 }*/else if (trigFunction == "sqrt"){
+			 Result.values[0][0] = pow(atof(angle.c_str()), 0.5);
+		}
+		return Result;
+
+	}else{
+		for (int i=0; i<matrix_List.size(); i++){
+			if (matrix_List[i].get_name() == angle){
+				CMatrix temp = matrix_List[i];
+				CMatrix ResultMat;
+				if (trigFunction == "sin") {
+					ResultMat = matsin(temp);
+				}else if (trigFunction == "cos"){
+					ResultMat = matcos(temp);
+				}else if (trigFunction == "tan"){
+					ResultMat = mattan(temp);
+				}else if (trigFunction == "sinh"){
+					ResultMat = matsinh(temp);
+				}else if (trigFunction == "cosh"){
+					ResultMat = matcosh(temp);
+				}else if (trigFunction == "tanh"){
+					ResultMat = mattanh(temp);
+				}else if (trigFunction == "sinInv") {
+					ResultMat = matsinInv(temp);
+				}else if (trigFunction == "cosInv"){
+					ResultMat = matcosInv(temp);
+				}else if (trigFunction == "tanInv"){
+					ResultMat = mattanInv(temp);
+				}/*else if (trigFunction == "sinhInv"){
+				 ResultMat = matsinhInv(temp);
+				 }else if (trigFunction == "coshInv"){
+				 ResultMat = matcoshInv(temp);
+				 }else if (trigFunction == "tanhInv"){
+				 ResultMat = mattanhInv(temp);
+				 }*/else if (trigFunction == "sqrt"){
+					 ResultMat = temp;
+					 ResultMat.power(0.5);
+				}
+				return ResultMat;
+			}
+		}
+	}
+	throw string("invalid Expression");
+}
