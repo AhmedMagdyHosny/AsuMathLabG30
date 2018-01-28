@@ -57,6 +57,12 @@ public :
 	CMatrix operator*(const CMatrix& m);
 	CMatrix operator/(const CMatrix& m);
 	void operator/=(const CMatrix& m);
+	
+	//Trig Functions
+	CMatrix matsin(CMatrix &M);
+	CMatrix matcos(CMatrix &M);
+	CMatrix mattan(CMatrix &M);
+
 };
 
 #endif
