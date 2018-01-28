@@ -1,5 +1,50 @@
 #include "matrix.h"
 
+string CMatrix::getString() {
+	string s;
+	for (int iR = 0; iR<nR; iR++) {
+		for (int iC = 0; iC<nC; iC++) {
+			char buffer[50];
+			sprintf_s(buffer, 50, "%g ", values[iR][iC]);
+			s += buffer;
+		}
+		if (iR != nR - 1)s += ";";
+	}
+	return s;
+}
+
+string CMatrix::MatrixCat(string s) {
+	string buffer = s;
+	int count = 0;
+	buffer = buffer.substr(buffer.find("[") + 1, buffer.length() - buffer.find("[") - 2);
+	string temp;
+	temp = buffer.substr(buffer.find("["), buffer.rfind("]") - buffer.find("[") + 1);
+
+	char* input = new char[temp.length() + 1];
+
+	strcpy(input, temp.c_str());
+	char*token;
+
+	token = strtok(input, "],");
+	CMatrix A;
+
+	while (token) {
+
+		CMatrix B(token);
+
+		A.addColumn(B);
+		if (A.nR != B.nR) throw("invalid concatenation");
+		token = strtok(NULL, "],");
+
+	}
+	
+	string output = A.getString();
+	//cout << output << endl;
+	s.replace(s.find(temp), temp.length(), output);
+
+	return string(s);
+}
+
 CMatrix  CMatrix::getInverse(){
 	int i,j,k,n;
 	double a[100][200],t;
