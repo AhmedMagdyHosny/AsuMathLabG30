@@ -62,6 +62,10 @@ public :
 	CMatrix matsin(CMatrix &M);
 	CMatrix matcos(CMatrix &M);
 	CMatrix mattan(CMatrix &M);
+	
+	
+	//String Trig Expression To Double Value..
+	CMatrix trigStrtoDouble(string trigExpression ,vector<CMatrix> &matrix_List);
 
 };
 
