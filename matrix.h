@@ -48,7 +48,7 @@ public :
 	CMatrix getInverse();
 	CMatrix getAdjoint(const CMatrix &m);
 	static string MatrixCat(string s);
-        
+        CMatrix power(double p);
 
 
 	//operators
