@@ -2,20 +2,29 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <list>
+#include <vector>
 
 using namespace std;
 
-void check_command(string command, list<CMatrix> &matrix_list);
-void make_operation(list<string> command, list<CMatrix> &matrix_list);
+vector<CMatrix> matrix_list;
+
+//=================================
+//Functions defenition
+string check_command(string command);
 void to_upperCase(string &s);
+string stringToken(string s, string separators, int &currentIndex);
+void checkOperation(vector<string> &command_list);
+string do_operation(string A, string op, string B);
+double evaluate(double A, string op, double B);
+CMatrix evaluate(CMatrix &A, string op, CMatrix &B);
+CMatrix evaluate(CMatrix &A, string op, double B);
 
-int main(int argc, char** argv){
 
+
+int main(int argc, char* argv[]){
 	string inputMode = "console";
 	string command;
 	ifstream inputFile;
-	list<CMatrix> matrix_list;
 	if (argc == 2){
 		inputFile.open(argv[1]);
 		if (inputFile.bad() || inputFile.fail()){
@@ -33,7 +42,13 @@ int main(int argc, char** argv){
 			if (command == "exit"){
 				break;
 			}
-			check_command(command, matrix_list);
+			if(command == "")	continue;
+			//formatStringSpaces(command);//Make spaces consistent
+			try{
+				check_command(command);
+			}catch(string error){
+				cout << error << endl;
+			}
 		}else if (inputMode == "file"){
 			getline(inputFile,command);
 			if (command.find("\r") != -1){
@@ -50,7 +65,13 @@ int main(int argc, char** argv){
 					if (temp.find(']') != -1) break;
 				}
 			}
-			check_command(command, matrix_list);
+			if(command == "")	continue;
+			//formatStringSpaces(command);//Make spaces consistent
+			try{
+				check_command(command);
+			}catch(string error){
+				cout << error << endl;
+			}
 			if (inputFile.eof()){
 				inputFile.close();
 				break;
@@ -61,107 +82,317 @@ int main(int argc, char** argv){
 	return 0;
 }
 
-void check_command(string command, list<CMatrix> &matrix_list){
+string check_command(string command){
 	string name, matrixData;
-	if (command .find('[') != -1){
-		name = command.substr(0,command.find(" "));
-		to_upperCase(name);
-		matrixData = command.substr(command.find('['));
-		CMatrix *temp = new CMatrix(matrixData);
-		temp -> set_name(name);
-		matrix_list.push_back(*temp);
+	int bracketIndex = command.find('[');
+	if (bracketIndex != -1){
+		if(command.find('[', bracketIndex+1) == -1){
+			name = command.substr(0,command.find(" "));
+			to_upperCase(name);
+			matrixData = command.substr(bracketIndex);
+			CMatrix temp(matrixData);
+			temp.set_name(name);
+			matrix_list.push_back(temp);
+		}else{
+			//=================================
+			//Concatination
+			vector<string> command_list;
+			string separators = " [];,";
+			int currentIndex = 0;
+			string token = stringToken(command, separators, currentIndex);
+			while(token != ""){
+				command_list.push_back(token);
+				token = stringToken(command, separators, currentIndex);
+			}
+			for(int i=2; i<command_list.size(); i++){
+				if(isName(command_list[i])){
+					name = command_list[i];
+					CMatrix temp;
+					for(int j=0; j<matrix_list.size(); j++){
+						if(matrix_list[j].get_name() == command_list[i]){
+							temp = matrix_list[j];
+							break;
+						}
+					}
+					int index = command.find(name);
+					command.erase(index,name.length());
+					command.insert(index, temp.get_string());
+				}else if(!isNumber(command_list[i])){
+					string result = check_command(command_list[i]);
+					int index = command.find(command_list[i]);
+					command.erase(index,command_list[i].length());
+					command.insert(index, result);
+				}
+			}
+			try{
+				string matrixData = CMatrix::MatrixCat(command);
+				CMatrix temp(matrixData.substr(matrixData.find("[")));
+				string name = addMatrix(temp);
+				command_list.erase(command_list.begin()+2,command_list.end());
+				command_list.push_back(name);
+				assignAndPrint(command_list);
+			}catch (string error){
+				throw(error);
+			}
+		}
 	}else{
-		list<string> command_list;
-		const char *separators = " ";
-		char *command_c = new char[command.size()+1];
-		command.copy(command_c, command.length());
-		command_c[command.length()] = '\0';
-		char *token = strtok(command_c, separators);
-		while (token){
+		formatStringSpaces(command);//Make spaces consistent
+		vector<string> command_list;
+		string separators = " ";
+		int currentIndex = 0;
+		string token = stringToken(command, separators, currentIndex);
+		while(token != ""){
 			command_list.push_back(token);
-			token = strtok(NULL, separators);
+			token = stringToken(command, separators, currentIndex);
+		}
+		//=================================
+		//Check if trasnpose is the only operation
+		if(command_list.size() == 3 && command_list[2].find("'") != -1){
+			string name = do_transpose(command_list[2]);
+			command_list[2] = name;
 		}
 		try{
-			make_operation(command_list, matrix_list);
+			checkOperation(command_list);
+			if(command_list.size() == 1)	return command_list[0];
+			assignAndPrint(command_list);
 			command_list.clear();
 		}catch(string error){
 			command_list.clear();
-			cout << error <<endl;
+			throw(error);
 		}
 	}
+	return "";
 }
 
-void make_operation(list<string> command_list, list<CMatrix> &matrix_list){
+void checkOperation(vector<string> &command_list){
 
-	string operators = "+-*/./";
-	bool assign = false, number = false, error = true;
-	string operation = "";
-	CMatrix last_operand;
-	for(list<string>::reverse_iterator l=command_list.rbegin(); l != command_list.rend(); l++){
-		if (*l == "="){
-			assign = true;
-		}else if (operators.find(*l) == -1){
-			string name = *l;
-			to_upperCase(name);
-			if (l->find("'") != -1){
-				operation = "'";
-				name.erase(name.find("'"), 1);
-			}
-			if(assign){
-				CMatrix *temp = new CMatrix;
-				*temp = last_operand;
-				temp -> set_name(name);
-				temp -> PrintMatrix();
-				matrix_list.push_back(*temp);
-			}else if (operation == "./" && number){
-				number = false;
-				int num = atof(l->c_str());
-				last_operand.dotSlash(num);
-			}else{
-				for (list<CMatrix>::iterator i = matrix_list.begin(); i != matrix_list.end(); i++){
-					error = true;
-					if (i -> get_name() == name){
-						if(operation == ""){
-							last_operand = *i;
-						}else{
-							if (operation == "+"){
-								last_operand = *i + last_operand;
-							}else if(operation == "'"){
-								last_operand.transpose(*i);
-							}else if (operation == "-"){
-								last_operand = *i - last_operand;
-							}else if (operation == "*"){
-								last_operand = *i * last_operand;
-							}else if (operation == "/"){
-								try{
-									last_operand = *i / last_operand;
-								}catch(string err){
-									cout << err <<endl;
-									return;
-								}
-							}
-						}
-						error = false;
-						break;
-					}
-				}
-				if (error){
-					string err = "Wrong operation and/or matrix '" + name + "' doesn't exist";
-					throw(err);
-					return;
-				}
-			}
-		}else{
-			operation = *l;
-			if (operation == "./") number = true;
+	for (int i=0; i<command_list.size(); i++){
+		if( command_list[i][0] == '('){
+			command_list[i].erase(0,1);
+			command_list[i].erase(command_list[i].end()-1);
+			string result = check_command(command_list[i]);
+			std::vector<string>::iterator it;
+			it = command_list.insert(command_list.begin()+i, result);
+			command_list.erase(it+1);
+		}
+	}
+
+	for (int i=0; i<command_list.size(); i++){
+		int bracket = command_list[i].find('(');
+		if (bracket == -1)	continue;
+		string trigfuncs = "sin cos tan sqrt";
+		string initfuncs = "rand eye zeros ones";
+		string funcName = command_list[i].substr(0,bracket);
+		if (trigfuncs.find(funcName) != -1){
+			CMatrix result =  CMatrix::trigStrtoDouble(command_list[i], matrix_list);
+			string s = addMatrix(result);
+			std::vector<string>::iterator it;
+			it = command_list.insert(command_list.begin()+i, s);
+			command_list.erase(it+1);
+		}else if(initfuncs.find(funcName) != -1){
+			CMatrix result =  CMatrix::matrixInit(command_list[i]);
+			string s = addMatrix(result);
+			std::vector<string>::iterator it;
+			it = command_list.insert(command_list.begin()+i, s);
+			command_list.erase(it+1);
+		}
+
+	}
+
+	for (int i=0; i<command_list.size(); i++){
+		if(command_list[i] == "*" || command_list[i] == "/" || command_list[i] == "./" || command_list[i] == "^" || command_list[i] == ".^"){
+			std::vector<string>::iterator it;
+			string result = do_operation(command_list[i-1], command_list[i], command_list[i+1]);
+			it = command_list.insert(command_list.begin()+i-1, result);
+			for(int j=0; j<3; j++) command_list.erase(it+1);
+			i--;
+		}
+	}
+
+	for (int i=0; i<command_list.size(); i++){
+		if(command_list[i] == "+" || command_list[i] == "-" || command_list[i] == ".+" || command_list[i] == ".-"){
+			std::vector<string>::iterator it;
+			string result = do_operation(command_list[i-1], command_list[i], command_list[i+1]);
+			it = command_list.insert(command_list.begin()+i-1, result);
+			for(int j=0; j<3; j++) command_list.erase(it+1);
+			i--;
 		}
 	}
 
 }
 
+//=================================
+//Convert a whole string into upper case.
 void to_upperCase(string &s){
 
-	for (int i=0, l=s.size(); i<l; i++){
+	for (int i=0, n=s.size(); i<n; i++){
 		s[i] = toupper(s[i]);
 	}
+}
+
+//=================================
+//Splits the string into blocks, it returns an empty string when the end of the string is reached
+//Works like strtok_s
+string stringToken(string s, string separators, int &currentIndex){
+
+	string toReturn;
+	bool parnths = true;
+	for(int i=currentIndex, n=s.length(); i<n; i++){
+		if(s[i] == '(' && i != 0 && !isalpha(s[i-1]) && parnths){
+			int parnthsclose = s.find(')',i);
+			int parnthsopen = s.find('(', i+1);
+			while (parnthsopen < parnthsclose && parnthsopen != -1){
+				parnthsclose = s.find(')',parnthsclose+1);
+				parnthsopen = s.find('(', parnthsopen+1);
+			}
+			toReturn = "(";
+			toReturn += s.substr(i+1, parnthsclose-i-1);
+			toReturn += ")";
+			currentIndex = parnthsclose+1;
+			return toReturn;
+		}else{
+			parnths = false;
+			if(separators.find(s[i]) != -1){
+				if(i-currentIndex == 0){
+					currentIndex = i+1;
+					continue;
+				}
+				toReturn = s.substr(currentIndex, i-currentIndex);
+				currentIndex = i+1;
+				return toReturn;
+			}
+		}
+		if(i == n-1){
+			toReturn = s.substr(currentIndex);
+			currentIndex = i+1;
+			return toReturn;
+		}
+	}
+	return (string)"";
+}
+
+string do_operation(string A, string op, string B){
+	bool AIsNum, BIsNum;
+	bool A_trans = false, B_trans = false;
+	AIsNum = isNumber(A);
+	BIsNum = isNumber(B);
+	double A_double, B_double;
+	CMatrix A_mat, B_mat;
+	CMatrix temp;
+	//=================================
+	//Check for transpose
+	if (A.find("'") != -1){
+		A.erase(A.find("'"),1);
+		A_trans = true;
+	}
+	if (B.find("'") != -1){
+		B.erase(B.find("'"),1);
+		B_trans = true;
+	}
+
+	if(op.find('.') != -1){//one operand is a number, the other is a matrix
+		if(AIsNum){
+			A_double = atof(A.c_str());
+			for (int i=0; i<matrix_list.size(); i++){
+				if (matrix_list[i].get_name() == B){
+					if(B_trans)
+						B_mat.transpose(matrix_list[i]);
+					else
+						B_mat = matrix_list[i];
+					break;
+				}
+			}
+			temp = evaluate(B_mat, op, A_double);
+		}else{
+			B_double = atof(B.c_str());
+			for (int i=0; i<matrix_list.size(); i++){
+				if (matrix_list[i].get_name() == A){
+					if(A_trans)
+						A_mat.transpose(matrix_list[i]);
+					else
+						A_mat = matrix_list[i];
+					break;
+				}
+			}
+			temp = evaluate(A_mat, op, B_double);
+		}
+		return addMatrix(temp);
+	}else if(AIsNum && BIsNum){
+		A_double = atof(A.c_str());
+		B_double = atof(B.c_str());
+		return to_string(evaluate(A_double, op, B_double));
+	}else{
+		for (int i=0; i<matrix_list.size(); i++){
+			if (matrix_list[i].get_name() == A){
+				if(A_trans)
+					A_mat.transpose(matrix_list[i]);
+				else
+					A_mat = matrix_list[i];
+			}
+			if (matrix_list[i].get_name() == B){
+				if(B_trans)
+					B_mat.transpose(matrix_list[i]);
+				else
+					B_mat = matrix_list[i];
+			}
+		}
+		temp = evaluate(A_mat, op, B_mat);
+		return addMatrix(temp);
+	}
+
+}
+
+double evaluate(double A, string op, double B){
+
+	if (op == "+"){
+		return A+B;
+	}else if (op == "-"){
+		return A-B;
+	}else if (op == "*"){
+		return A*B;
+	}else if (op == "/"){
+		try{
+			return A/B;
+		}catch(string err){
+			throw(err);
+		}
+	}else if(op == "^"){
+		return pow(A,B);
+	}
+
+}
+
+CMatrix evaluate(CMatrix &A, string op, CMatrix &B){
+
+	if (op == "+"){
+		return A+B;
+	}else if (op == "-"){
+		return A-B;
+	}else if (op == "*"){
+		return A*B;
+	}else if (op == "/"){
+		try{
+			return A/B;
+		}catch(string err){
+			throw(err);
+		}
+	}
+
+}
+
+CMatrix evaluate(CMatrix &A, string op, double B){
+
+	if (op == ".+"){
+		return A+B;
+	}else if (op == ".-"){
+		return A-B;
+	}else if (op == ".^" || op == "^"){
+		return A.power(B);
+	}
+	else if (op == "./"){
+		CMatrix temp = A;
+		temp.dotSlash(B);
+		return temp;
+	}
+
 }
