@@ -18,7 +18,7 @@ string do_operation(string A, string op, string B);
 double evaluate(double A, string op, double B);
 CMatrix evaluate(CMatrix &A, string op, CMatrix &B);
 CMatrix evaluate(CMatrix &A, string op, double B);
-
+void formatStringSpaces(string &s);
 
 
 int main(int argc, char* argv[]){
@@ -394,5 +394,57 @@ CMatrix evaluate(CMatrix &A, string op, double B){
 		temp.dotSlash(B);
 		return temp;
 	}
+	//=================================
+//Make the spaces consistent in the input string
+void formatStringSpaces(string &s){
+
+	string operators = "+-*/^=";
+	if (s[s.size()-1] == ';'){
+		s.erase(s.size()-1);
+	}
+	for(int i=0, n=s.length(); i<n; i++){
+		int index = operators.find(s[i]);
+		if (index != -1){
+			if (s[i-1] == '.'){
+				if (s[i-2] != ' '){
+					s.insert(i-1, " ");
+					n++;
+					i++;
+				}
+				if (s[i+1] != ' '){
+					s.insert(i+1, " ");
+					n++;
+					i++;
+				}
+			}else{
+				if (s[i-1] != ' '){
+					s.insert(i, " ");
+					n++;
+					i++;
+				}
+				if (s[i+1] != ' '){
+					s.insert(i+1, " ");
+					n++;
+					i++;
+				}
+			}
+		}
+		if (s[i] == ','){
+			if (s[i-1] == ' '){
+				s.erase(i-1,1);
+				n--;
+				i--;
+			}
+			if (s[i+1] == ' '){
+				s.erase(i+1,1);
+				n--;
+				i--;
+			}
+		}
+	}
+
+}
+	
+	
 
 }
