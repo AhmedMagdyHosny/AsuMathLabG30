@@ -39,6 +39,7 @@ public :
 	void set_name(string n);
 	string get_name();
 	void PrintMatrix();
+	string getString();
 	
 	void transpose(const CMatrix &m);
 	void dotSlash(int num);
@@ -46,6 +47,7 @@ public :
 	double getDeterminant();
 	CMatrix getInverse();
 	CMatrix getAdjoint(const CMatrix &m);
+	static string MatrixCat(string s);
         
 
 
