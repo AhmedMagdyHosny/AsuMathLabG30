@@ -19,6 +19,7 @@ double evaluate(double A, string op, double B);
 CMatrix evaluate(CMatrix &A, string op, CMatrix &B);
 CMatrix evaluate(CMatrix &A, string op, double B);
 void formatStringSpaces(string &s);
+bool isNumber(string s);
 
 
 int main(int argc, char* argv[]){
@@ -444,6 +445,21 @@ void formatStringSpaces(string &s){
 	}
 
 }
+	
+	
+	//=================================
+//Check if a string is a number.
+bool isNumber(string s){
+
+	for(int i=0, n=s.length(); i<n; i++){
+		if (!isdigit(s[i]) && s[i] != '.' && s[i] != '-')	return false;
+	}
+	return true;
+
+}
+	
+	
+	
 	
 	
 
