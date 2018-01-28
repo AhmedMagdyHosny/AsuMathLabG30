@@ -369,3 +369,32 @@ void CMatrix::PrintMatrix()
 	}
 	cout << "]" << endl;
 }
+
+
+// Trig functions....
+CMatrix CMatrix::matsin(CMatrix &M){
+	CMatrix Result(M.nR, M.nC);
+	for (int i=0; i<Result.nR; i++) {
+		for (int j=0; j<Result.nC; j++)
+			Result.values[i][j] = sin(M.values[i][j]);
+	}
+	return Result;
+}
+
+CMatrix CMatrix::matcos(CMatrix &M){
+	CMatrix Result(M.nR, M.nC);
+	for (int i=0; i<Result.nR; i++) {
+		for (int j=0; j<Result.nC; j++)
+			Result.values[i][j] = cos(M.values[i][j]);
+	}
+	return Result;
+}
+
+CMatrix CMatrix::mattan(CMatrix &M){
+	CMatrix Result(M.nR, M.nC);
+	for (int i=0; i<Result.nR; i++) {
+		for (int j=0; j<Result.nC; j++)
+			Result.values[i][j] = tan(M.values[i][j]);
+	}
+	return Result;
+}
