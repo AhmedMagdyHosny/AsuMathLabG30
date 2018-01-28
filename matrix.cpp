@@ -476,3 +476,15 @@ CMatrix CMatrix::trigStrtoDouble(string trigExpression ,vector<CMatrix> &matrix_
 	}
 	throw string("invalid Expression");
 }
+
+
+CMatrix CMatrix::power(double p) {
+
+	CMatrix A(nR,nC);
+	for (int ir = 0; ir < nR; ir++)
+		for (int ic = 0; ic < nC; ic++)
+			A.values[ir][ic] = pow(values[ir][ic], p);
+
+	return A;
+}
+
