@@ -41,6 +41,8 @@ public :
 	string get_name();
 	void PrintMatrix();
 	string getString();
+	string get_string();
+	CMatrix matrixInit(string expression);
 	
 	void transpose(const CMatrix &m);
 	void dotSlash(int num);
