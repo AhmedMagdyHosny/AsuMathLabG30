@@ -20,6 +20,9 @@ CMatrix evaluate(CMatrix &A, string op, CMatrix &B);
 CMatrix evaluate(CMatrix &A, string op, double B);
 void formatStringSpaces(string &s);
 bool isNumber(string s);
+bool isName(string s);
+string addMatrix(CMatrix &m);
+
 void assignAndPrint(vector<string> &command_list) ;
 
 
@@ -487,5 +490,34 @@ bool isNumber(string s){
 	
 	
 	
+
+}
+	
+	//Check if a string is a name.
+bool isName(string s){
+
+	for(int i=0, n=s.length(); i<n; i++){
+		if (!isalpha(s[i]))	return false;
+	}
+	return true;
+
+}
+	
+	
+	string addMatrix(CMatrix &m){
+
+	static int index = 0;
+	if(m.get_nR() == 1 && m.get_nC() == 1){
+		return m.get_string();
+	}
+	char* buffer = new char[10];
+	sprintf(buffer,"mat%d", index);
+	CMatrix temp = m;
+	temp.set_name((string)buffer);
+	matrix_list.push_back(temp);
+	string toreturn = (string)buffer;
+	delete[] buffer;
+	index++;
+	return toreturn;
 
 }
