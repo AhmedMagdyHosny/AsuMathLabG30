@@ -568,3 +568,78 @@ CMatrix CMatrix::power(double p) {
 	return A;
 }
 
+
+string CMatrix::get_string(){
+
+	string matrixData = "";
+	if(!(nR == 1 && nC == 1))
+		matrixData += "[";
+	for (int i = 0; i < nR; i++)
+	{
+		for (int j = 0; j < nC; j++){
+			if (j < nC-1){
+				matrixData += to_string(values[i][j]); 
+				matrixData += " ";
+			}
+			else
+				matrixData += to_string(values[i][j]);
+		}
+		if (i < nR-1)
+			matrixData += "; ";
+	}
+	if(!(nR == 1 && nC == 1))
+		matrixData += "]";
+	return matrixData;
+
+}
+
+
+CMatrix CMatrix::matrixInit(string expression){
+
+	string Function = expression.substr(0,expression.find('('));
+	string param = expression.substr(expression.find('(')+1 , expression.find(')')-expression.find('(')-1);
+	CMatrix ResultMat;
+
+	if (Function == "rand"){
+		int a,b,comma;
+		string a_str, b_str;
+		comma = param.find(",");
+		a_str = param.substr(0,comma);
+		if(param[comma+1] == ' ') comma++;
+		b_str = param.substr(comma+1);
+		a = atof(a_str.c_str());
+		b = atof(b_str.c_str());
+		ResultMat = CMatrix(a, b, CMatrix::MI_RAND);
+	}else if (Function == "eye"){
+		int a,b,comma;
+		string a_str, b_str;
+		comma = param.find(",");
+		a_str = param.substr(0,comma);
+		if(param[comma+1] == ' ') comma++;
+		b_str = param.substr(comma+1);
+		a = atof(a_str.c_str());
+		b = atof(b_str.c_str());
+		ResultMat = CMatrix(a, b, CMatrix::MI_EYE);
+	}else if (Function == "zeros"){
+		int a,b,comma;
+		string a_str, b_str;
+		comma = param.find(",");
+		a_str = param.substr(0,comma);
+		if(param[comma+1] == ' ') comma++;
+		b_str = param.substr(comma+1);
+		a = atof(a_str.c_str());
+		b = atof(b_str.c_str());
+		ResultMat = CMatrix(a, b, CMatrix::MI_ZEROS);
+	}else if (Function == "ones"){
+		int a,b,comma;
+		string a_str, b_str;
+		comma = param.find(",");
+		a_str = param.substr(0,comma);
+		if(param[comma+1] == ' ') comma++;
+		b_str = param.substr(comma+1);
+		a = atof(a_str.c_str());
+		b = atof(b_str.c_str());
+		ResultMat = CMatrix(a, b, CMatrix::MI_ONES);
+	}
+	return ResultMat;
+}
