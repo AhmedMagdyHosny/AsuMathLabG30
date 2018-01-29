@@ -20,6 +20,7 @@ CMatrix evaluate(CMatrix &A, string op, CMatrix &B);
 CMatrix evaluate(CMatrix &A, string op, double B);
 void formatStringSpaces(string &s);
 bool isNumber(string s);
+void assignAndPrint(vector<string> &command_list) ;
 
 
 int main(int argc, char* argv[]){
@@ -458,7 +459,31 @@ bool isNumber(string s){
 
 }
 	
+
 	
+	void assignAndPrint(vector<string> &command_list){
+
+	if (command_list.size() != 3){
+		checkOperation(command_list);
+	}
+	if (command_list.size() != 3){
+		throw((string)"Error in assigning");
+	}else{
+		CMatrix temp;
+		if(isNumber(command_list[2])){
+			temp =  CMatrix(command_list[2]);
+		}else{
+			for (int i=0; i<matrix_list.size(); i++){
+				if(matrix_list[i].get_name() == command_list[2]){
+					temp = matrix_list[i];
+					break;
+				}
+			}
+		}
+		temp.set_name(command_list[0]);
+		matrix_list.push_back(temp);
+		temp.PrintMatrix();
+	}
 	
 	
 	
