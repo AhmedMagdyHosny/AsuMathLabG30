@@ -265,7 +265,42 @@ void CMatrix::add(const CMatrix &m)
 		throw("Invalid matrix dimension");
 	for(int iR=0;iR<nR;iR++)
 		for(int iC=0;iC<nC;iC++)
-			values[iR][iC] += m.values[iR][iC];
+CMatrix::CMatrix(int nR, int nC, int initialization , double initializationValue) { 
+	this->nR = nR;
+	this->nC = nC; 
+	if ((nR*nC) == 0) 
+	{ values = NULL; return; }
+	values = new double*[nR];
+	for (int iR = 0; iR<nR; iR++) 
+	{ 
+		values[iR] = new double[nC]; 
+
+		switch (initialization)
+		{
+
+		case MI_ZEROS:
+			{for (int iC = 0; iC < nC; iC++)
+				values[iR][iC] = 0; break; }
+		case MI_ONES: 
+			{for (int iC = 0; iC < nC; iC++)
+				values[iR][iC] = 1; break; }
+		case MI_EYE: 
+			{ if(nC!=nR) throw("Invalid matrix dimension");
+
+			for (int iC = 0; iC < nC; iC++)
+				values[iR][iC] = (iR == iC) ? 1 : 0; break; }
+		case MI_RAND: 
+			{
+				srand(time(0));
+				for (int iC = 0; iC < nC; iC++)
+					values[iR][iC] = (rand() % 1000000) / 1000.0; break; }
+		case MI_VALUE:
+			{for (int iC = 0; iC < nC; iC++)
+				values[iR][iC] = initializationValue; break; }
+
+		} 
+	} 
+}			values[iR][iC] += m.values[iR][iC];
 }
 
 CMatrix CMatrix::operator=(const CMatrix &m)
