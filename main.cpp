@@ -12,18 +12,19 @@ vector<CMatrix> matrix_list;
 //Functions defenition
 string check_command(string command);
 void to_upperCase(string &s);
+bool isNumber(string s);
+bool isName(string s);
+void formatStringSpaces(string &s);
 string stringToken(string s, string separators, int &currentIndex);
 void checkOperation(vector<string> &command_list);
 string do_operation(string A, string op, string B);
 double evaluate(double A, string op, double B);
 CMatrix evaluate(CMatrix &A, string op, CMatrix &B);
 CMatrix evaluate(CMatrix &A, string op, double B);
-void formatStringSpaces(string &s);
-bool isNumber(string s);
-bool isName(string s);
 string addMatrix(CMatrix &m);
+void assignAndPrint(vector<string> &command_list);
+string do_transpose(string A);
 
-void assignAndPrint(vector<string> &command_list) ;
 
 
 int main(int argc, char* argv[]){
@@ -236,6 +237,80 @@ void to_upperCase(string &s){
 }
 
 //=================================
+//Check if a string is a number.
+bool isNumber(string s){
+
+	for(int i=0, n=s.length(); i<n; i++){
+		if (!isdigit(s[i]) && s[i] != '.' && s[i] != '-')	return false;
+	}
+	return true;
+
+}
+
+//=================================
+//Check if a string is a name.
+bool isName(string s){
+
+	for(int i=0, n=s.length(); i<n; i++){
+		if (!isalpha(s[i]))	return false;
+	}
+	return true;
+
+}
+
+
+//=================================
+//Make the spaces consistent in the input string
+void formatStringSpaces(string &s){
+
+	string operators = "+-*/^=";
+	if (s[s.size()-1] == ';'){
+		s.erase(s.size()-1);
+	}
+	for(int i=0, n=s.length(); i<n; i++){
+		int index = operators.find(s[i]);
+		if (index != -1){
+			if (s[i-1] == '.'){
+				if (s[i-2] != ' '){
+					s.insert(i-1, " ");
+					n++;
+					i++;
+				}
+				if (s[i+1] != ' '){
+					s.insert(i+1, " ");
+					n++;
+					i++;
+				}
+			}else{
+				if (s[i-1] != ' '){
+					s.insert(i, " ");
+					n++;
+					i++;
+				}
+				if (s[i+1] != ' '){
+					s.insert(i+1, " ");
+					n++;
+					i++;
+				}
+			}
+		}
+		if (s[i] == ','){
+			if (s[i-1] == ' '){
+				s.erase(i-1,1);
+				n--;
+				i--;
+			}
+			if (s[i+1] == ' '){
+				s.erase(i+1,1);
+				n--;
+				i--;
+			}
+		}
+	}
+
+}
+
+//=================================
 //Splits the string into blocks, it returns an empty string when the end of the string is reached
 //Works like strtok_s
 string stringToken(string s, string separators, int &currentIndex){
@@ -347,6 +422,23 @@ string do_operation(string A, string op, string B){
 
 }
 
+string do_transpose(string A){
+
+	int trans = A.find("'");
+	CMatrix temp;
+	if(trans != -1){
+		A.erase(trans, 1);
+		for (int i=0; i<matrix_list.size(); i++){
+			if (matrix_list[i].get_name() == A){
+				temp.transpose(matrix_list[i]);
+			}
+		}
+		string name = addMatrix(temp);
+		return name;
+	}
+
+}
+
 double evaluate(double A, string op, double B){
 
 	if (op == "+"){
@@ -399,72 +491,28 @@ CMatrix evaluate(CMatrix &A, string op, double B){
 		temp.dotSlash(B);
 		return temp;
 	}
-	//=================================
-//Make the spaces consistent in the input string
-void formatStringSpaces(string &s){
-
-	string operators = "+-*/^=";
-	if (s[s.size()-1] == ';'){
-		s.erase(s.size()-1);
-	}
-	for(int i=0, n=s.length(); i<n; i++){
-		int index = operators.find(s[i]);
-		if (index != -1){
-			if (s[i-1] == '.'){
-				if (s[i-2] != ' '){
-					s.insert(i-1, " ");
-					n++;
-					i++;
-				}
-				if (s[i+1] != ' '){
-					s.insert(i+1, " ");
-					n++;
-					i++;
-				}
-			}else{
-				if (s[i-1] != ' '){
-					s.insert(i, " ");
-					n++;
-					i++;
-				}
-				if (s[i+1] != ' '){
-					s.insert(i+1, " ");
-					n++;
-					i++;
-				}
-			}
-		}
-		if (s[i] == ','){
-			if (s[i-1] == ' '){
-				s.erase(i-1,1);
-				n--;
-				i--;
-			}
-			if (s[i+1] == ' '){
-				s.erase(i+1,1);
-				n--;
-				i--;
-			}
-		}
-	}
 
 }
-	
-	
-	//=================================
-//Check if a string is a number.
-bool isNumber(string s){
 
-	for(int i=0, n=s.length(); i<n; i++){
-		if (!isdigit(s[i]) && s[i] != '.' && s[i] != '-')	return false;
+string addMatrix(CMatrix &m){
+
+	static int index = 0;
+	if(m.get_nR() == 1 && m.get_nC() == 1){
+		return m.get_string();
 	}
-	return true;
+	char* buffer = new char[10];
+	sprintf(buffer,"mat%d", index);
+	CMatrix temp = m;
+	temp.set_name((string)buffer);
+	matrix_list.push_back(temp);
+	string toreturn = (string)buffer;
+	delete[] buffer;
+	index++;
+	return toreturn;
 
 }
-	
 
-	
-	void assignAndPrint(vector<string> &command_list){
+void assignAndPrint(vector<string> &command_list){
 
 	if (command_list.size() != 3){
 		checkOperation(command_list);
@@ -487,37 +535,5 @@ bool isNumber(string s){
 		matrix_list.push_back(temp);
 		temp.PrintMatrix();
 	}
-	
-	
-	
-
-}
-	
-	//Check if a string is a name.
-bool isName(string s){
-
-	for(int i=0, n=s.length(); i<n; i++){
-		if (!isalpha(s[i]))	return false;
-	}
-	return true;
-
-}
-	
-	
-	string addMatrix(CMatrix &m){
-
-	static int index = 0;
-	if(m.get_nR() == 1 && m.get_nC() == 1){
-		return m.get_string();
-	}
-	char* buffer = new char[10];
-	sprintf(buffer,"mat%d", index);
-	CMatrix temp = m;
-	temp.set_name((string)buffer);
-	matrix_list.push_back(temp);
-	string toreturn = (string)buffer;
-	delete[] buffer;
-	index++;
-	return toreturn;
 
 }
