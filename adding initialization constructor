@@ -26,6 +26,7 @@ public :
 	CMatrix(string s);
 	CMatrix(double d);
 	CMatrix(const CMatrix& m);
+	CMatrix(int nR, int nC, int initialization, double initializationValue=0);
 	//functions
 	void copy(const CMatrix& m);
 	void copy(double d);
