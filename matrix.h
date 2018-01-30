@@ -47,7 +47,7 @@ public :
 	void add(const CMatrix& m);
 	void sub(const CMatrix& m);
 	void mul(const CMatrix& m);
-	void dotSlash(int num);
+	void dotSlash(int num, bool doubleFirst);
 	CMatrix power(double p);
 	static string MatrixCat(string s);
 	static CMatrix trigStrtoDouble(string trigExpression ,vector<CMatrix> &matrix_List);
