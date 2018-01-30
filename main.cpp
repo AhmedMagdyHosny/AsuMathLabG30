@@ -190,6 +190,12 @@ void checkOperation(vector<string> &command_list){
 		string initfuncs = "rand eye zeros ones";
 		string funcName = command_list[i].substr(0,bracket);
 		if (trigfuncs.find(funcName) != -1){
+			string angle = command_list[i].substr(bracket+1, command_list[i].rfind(")")-bracket-1);
+			if(!isNumber(angle) || !isName(angle)){
+				string ang = check_command(angle);
+				command_list[i].erase(bracket+1, angle.length());
+				command_list[i].insert(bracket+1, ang);
+			}
 			CMatrix result =  CMatrix::trigStrtoDouble(command_list[i], matrix_list);
 			string s = addMatrix(result);
 			std::vector<string>::iterator it;
@@ -206,7 +212,17 @@ void checkOperation(vector<string> &command_list){
 	}
 
 	for (int i=0; i<command_list.size(); i++){
-		if(command_list[i] == "*" || command_list[i] == "/" || command_list[i] == "./" || command_list[i] == "^" || command_list[i] == ".^"){
+		if(command_list[i] == "^" || command_list[i] == ".^"){
+			std::vector<string>::iterator it;
+			string result = do_operation(command_list[i-1], command_list[i], command_list[i+1]);
+			it = command_list.insert(command_list.begin()+i-1, result);
+			for(int j=0; j<3; j++) command_list.erase(it+1);
+			i--;
+		}
+	}
+
+	for (int i=0; i<command_list.size(); i++){
+		if(command_list[i] == "*" || command_list[i] == "/" || command_list[i] == "./"){
 			std::vector<string>::iterator it;
 			string result = do_operation(command_list[i-1], command_list[i], command_list[i+1]);
 			it = command_list.insert(command_list.begin()+i-1, result);
@@ -263,6 +279,7 @@ bool isName(string s){
 //Make the spaces consistent in the input string
 void formatStringSpaces(string &s){
 
+	if (s == "")	return;
 	string operators = "+-*/^=";
 	if (s[s.size()-1] == ';'){
 		s.erase(s.size()-1);
@@ -316,7 +333,7 @@ void formatStringSpaces(string &s){
 string stringToken(string s, string separators, int &currentIndex){
 
 	string toReturn;
-	bool parnths = true;
+	bool parnths = true, trig = true;;
 	for(int i=currentIndex, n=s.length(); i<n; i++){
 		if(s[i] == '(' && i != 0 && !isalpha(s[i-1]) && parnths){
 			int parnthsclose = s.find(')',i);
@@ -330,8 +347,27 @@ string stringToken(string s, string separators, int &currentIndex){
 			toReturn += ")";
 			currentIndex = parnthsclose+1;
 			return toReturn;
+		}else if(s[i] == '(' && i == 0 && parnths){
+			int parnthsclose = s.find(')',i);
+			int parnthsopen = s.find('(', i+1);
+			while (parnthsopen < parnthsclose && parnthsopen != -1){
+				parnthsclose = s.find(')',parnthsclose+1);
+				parnthsopen = s.find('(', parnthsopen+1);
+			}
+			toReturn = "(";
+			toReturn += s.substr(i+1, parnthsclose-i-1);
+			toReturn += ")";
+			currentIndex = parnthsclose+1;
+			return toReturn;
+		}else if(s[i] == '(' && i != 0 && isalpha(s[i-1]) && trig){
+			int parnthsclose = s.find(')',i);
+			toReturn = "";
+			toReturn += s.substr(currentIndex, parnthsclose-currentIndex+1);
+			currentIndex = parnthsclose+1;
+			return toReturn;
 		}else{
 			parnths = false;
+			if(!isalpha(s[i]))	trig = false;
 			if(separators.find(s[i]) != -1){
 				if(i-currentIndex == 0){
 					currentIndex = i+1;
