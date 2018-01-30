@@ -20,7 +20,7 @@ void checkOperation(vector<string> &command_list);
 string do_operation(string A, string op, string B);
 double evaluate(double A, string op, double B);
 CMatrix evaluate(CMatrix &A, string op, CMatrix &B);
-CMatrix evaluate(CMatrix &A, string op, double B);
+CMatrix evaluate(CMatrix &A, string op, double B, bool doubleFirst);
 string addMatrix(CMatrix &m);
 void assignAndPrint(vector<string> &command_list);
 string do_transpose(string A);
@@ -191,7 +191,7 @@ void checkOperation(vector<string> &command_list){
 		string funcName = command_list[i].substr(0,bracket);
 		if (trigfuncs.find(funcName) != -1){
 			string angle = command_list[i].substr(bracket+1, command_list[i].rfind(")")-bracket-1);
-			if(!isNumber(angle) || !isName(angle)){
+			if(!isNumber(angle) && !isName(angle)){
 				string ang = check_command(angle);
 				command_list[i].erase(bracket+1, angle.length());
 				command_list[i].insert(bracket+1, ang);
@@ -214,7 +214,12 @@ void checkOperation(vector<string> &command_list){
 	for (int i=0; i<command_list.size(); i++){
 		if(command_list[i] == "^" || command_list[i] == ".^"){
 			std::vector<string>::iterator it;
-			string result = do_operation(command_list[i-1], command_list[i], command_list[i+1]);
+			string result;
+			try{
+				result = do_operation(command_list[i-1], command_list[i], command_list[i+1]);
+			}catch(string error){
+				throw(error);
+			}
 			it = command_list.insert(command_list.begin()+i-1, result);
 			for(int j=0; j<3; j++) command_list.erase(it+1);
 			i--;
@@ -224,7 +229,12 @@ void checkOperation(vector<string> &command_list){
 	for (int i=0; i<command_list.size(); i++){
 		if(command_list[i] == "*" || command_list[i] == "/" || command_list[i] == "./"){
 			std::vector<string>::iterator it;
-			string result = do_operation(command_list[i-1], command_list[i], command_list[i+1]);
+			string result;
+			try{
+				result = do_operation(command_list[i-1], command_list[i], command_list[i+1]);
+			}catch(string error){
+				throw(error);
+			}
 			it = command_list.insert(command_list.begin()+i-1, result);
 			for(int j=0; j<3; j++) command_list.erase(it+1);
 			i--;
@@ -234,7 +244,12 @@ void checkOperation(vector<string> &command_list){
 	for (int i=0; i<command_list.size(); i++){
 		if(command_list[i] == "+" || command_list[i] == "-" || command_list[i] == ".+" || command_list[i] == ".-"){
 			std::vector<string>::iterator it;
-			string result = do_operation(command_list[i-1], command_list[i], command_list[i+1]);
+			string result;
+			try{
+				result = do_operation(command_list[i-1], command_list[i], command_list[i+1]);
+			}catch(string error){
+				throw(error);
+			}
 			it = command_list.insert(command_list.begin()+i-1, result);
 			for(int j=0; j<3; j++) command_list.erase(it+1);
 			i--;
@@ -406,31 +421,39 @@ string do_operation(string A, string op, string B){
 		B_trans = true;
 	}
 
-	if(op.find('.') != -1){//one operand is a number, the other is a matrix
-		if(AIsNum){
-			A_double = atof(A.c_str());
-			for (int i=0; i<matrix_list.size(); i++){
-				if (matrix_list[i].get_name() == B){
-					if(B_trans)
-						B_mat.transpose(matrix_list[i]);
-					else
-						B_mat = matrix_list[i];
-					break;
-				}
+	//if(op.find('.') != -1){//one operand is a number, the other is a matrix
+	if(AIsNum && !BIsNum){
+		A_double = atof(A.c_str());
+		for (int i=0; i<matrix_list.size(); i++){
+			if (matrix_list[i].get_name() == B){
+				if(B_trans)
+					B_mat.transpose(matrix_list[i]);
+				else
+					B_mat = matrix_list[i];
+				break;
 			}
-			temp = evaluate(B_mat, op, A_double);
-		}else{
-			B_double = atof(B.c_str());
-			for (int i=0; i<matrix_list.size(); i++){
-				if (matrix_list[i].get_name() == A){
-					if(A_trans)
-						A_mat.transpose(matrix_list[i]);
-					else
-						A_mat = matrix_list[i];
-					break;
-				}
+		}
+		try{
+			temp = evaluate(B_mat, op, A_double, AIsNum);
+		}catch(string error){
+			throw(error);
+		}
+		return addMatrix(temp);
+	}else if (!AIsNum && BIsNum){
+		B_double = atof(B.c_str());
+		for (int i=0; i<matrix_list.size(); i++){
+			if (matrix_list[i].get_name() == A){
+				if(A_trans)
+					A_mat.transpose(matrix_list[i]);
+				else
+					A_mat = matrix_list[i];
+				break;
 			}
-			temp = evaluate(A_mat, op, B_double);
+		}
+		try{
+			temp = evaluate(A_mat, op, B_double, AIsNum);
+		}catch(string error){
+			throw(error);
 		}
 		return addMatrix(temp);
 	}else if(AIsNum && BIsNum){
@@ -452,7 +475,11 @@ string do_operation(string A, string op, string B){
 					B_mat = matrix_list[i];
 			}
 		}
-		temp = evaluate(A_mat, op, B_mat);
+		try{
+			temp = evaluate(A_mat, op, B_mat);
+		}catch(string error){
+			throw(error);
+		}
 		return addMatrix(temp);
 	}
 
@@ -491,6 +518,8 @@ double evaluate(double A, string op, double B){
 		}
 	}else if(op == "^"){
 		return pow(A,B);
+	}else{
+		throw((string)"Wrong operation!");
 	}
 
 }
@@ -509,11 +538,13 @@ CMatrix evaluate(CMatrix &A, string op, CMatrix &B){
 		}catch(string err){
 			throw(err);
 		}
+	}else{
+		throw((string)"Wrong operation!");
 	}
 
 }
 
-CMatrix evaluate(CMatrix &A, string op, double B){
+CMatrix evaluate(CMatrix &A, string op, double B, bool doubleFirst){
 
 	if (op == ".+"){
 		return A+B;
@@ -524,8 +555,10 @@ CMatrix evaluate(CMatrix &A, string op, double B){
 	}
 	else if (op == "./"){
 		CMatrix temp = A;
-		temp.dotSlash(B);
+		temp.dotSlash(B, doubleFirst);
 		return temp;
+	}else{
+		throw((string)"Wrong operation!");
 	}
 
 }
