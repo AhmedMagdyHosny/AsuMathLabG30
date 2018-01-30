@@ -193,11 +193,19 @@ void CMatrix::mul(const CMatrix& m){
 		copy(r);
 }
 
-void CMatrix::dotSlash(int num){
+void CMatrix::dotSlash(int num, bool doubleFirst){
 
-	for (int i=0; i<this->nC; i++){
-		for(int j=0; j<this->nR; j++){
-			this->values[i][j] = num / this->values[i][j];
+	if(doubleFirst){
+		for (int i=0; i<this->nC; i++){
+			for(int j=0; j<this->nR; j++){
+				this->values[i][j] = num / this->values[i][j];
+			}
+		}
+	}else{
+		for (int i=0; i<this->nC; i++){
+			for(int j=0; j<this->nR; j++){
+				this->values[i][j] = this->values[i][j] / num;
+			}
 		}
 	}
 
@@ -316,7 +324,7 @@ CMatrix CMatrix::trigStrtoDouble(string trigExpression ,vector<CMatrix> &matrix_
 				 ResultMat = mattanhInv(temp);
 				 }*/else if (trigFunction == "sqrt"){
 					 ResultMat = temp;
-					 ResultMat.power(0.5);
+					 ResultMat = ResultMat.power(0.5);
 				}
 				return ResultMat;
 			}
