@@ -459,7 +459,7 @@ string do_operation(string A, string op, string B){
 	}else if(AIsNum && BIsNum){
 		A_double = atof(A.c_str());
 		B_double = atof(B.c_str());
-		return to_string(evaluate(A_double, op, B_double));
+		return std::to_string(evaluate(A_double, op, B_double));
 	}else{
 		for (int i=0; i<matrix_list.size(); i++){
 			if (matrix_list[i].get_name() == A){

@@ -116,19 +116,19 @@ void CMatrix::copy(string s){
 	strcpy(buffer, s.c_str());
 	char* lineContext;
 	const char* lineSeparators = ";\r\n";
-	char* line = strtok_s(buffer, lineSeparators, &lineContext);
+	char* line = strtok_r(buffer, lineSeparators, &lineContext);
 	while(line){
 		CMatrix row;
 		char* context;
 		const char* separators = " []";
-		char* token = strtok_s(line, separators, &context);
+		char* token = strtok_r(line, separators, &context);
 		while(token){
 			CMatrix item = atof(token);
 			row.addColumn(item);
-			token = strtok_s(NULL, separators, &context);
+			token = strtok_r(NULL, separators, &context);
 		}
 		if(row.nC>0 && (row.nC==nC || nR==0))addRow(row);
-		line = strtok_s(NULL, lineSeparators, &lineContext);
+		line = strtok_r(NULL, lineSeparators, &lineContext);
 	}
 	delete[] buffer;
 }
@@ -251,7 +251,7 @@ string CMatrix::MatrixCat(string s) {
 	}
 	string output = A.get_string();
 	output.erase(0,1);
-	output.erase(output.rfind("]"),1);
+	output.erase(output.rfind("]"), 1);
 	s.replace(s.find(temp), temp.length(), output);
 	
 	return string(s);
