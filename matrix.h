@@ -55,7 +55,7 @@ public :
 	void set_name(string n);
 	string get_name();
 	string get_string();
-	string getString();
+	//string getString();//Awad
 	void PrintMatrix();
 	int get_nR();
 	int get_nC();
