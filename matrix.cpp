@@ -249,8 +249,9 @@ string CMatrix::MatrixCat(string s) {
 		token = strtok(NULL, "],");
 
 	}
-	string output = A.getString();
-	//cout << output << endl;
+	string output = A.get_string();
+	output.erase(0,1);
+	output.erase(output.rfind("]"),1);
 	s.replace(s.find(temp), temp.length(), output);
 	
 	return string(s);
@@ -538,7 +539,7 @@ string CMatrix::get_string(){
 
 //=================================
 //Awad
-string CMatrix::getString() { 
+/*string CMatrix::getString() { 
 	string s;
 	for (int iR = 0; iR<nR; iR++) { 
 		for (int iC = 0; iC<nC; iC++) { 
@@ -546,7 +547,7 @@ string CMatrix::getString() {
 			sprintf_s(buffer, 50, "%g ", values[iR][iC]); 
 			s += buffer; }
 		if(iR!=nR-1)s += ";"; } 
-	return s; }
+	return s; }*/
 
 void CMatrix::PrintMatrix()
 {
